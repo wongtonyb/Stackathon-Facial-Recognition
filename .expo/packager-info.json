@@ -1,9 +1,9 @@
 {
   "devToolsPort": 19004,
-  "expoServerPort": 19000,
-  "packagerPort": 19003,
-  "packagerPid": 19132,
-  "expoServerNgrokUrl": "https://pp-87e.anonymous.stackathon-facial-recognition.exp.direct",
-  "packagerNgrokUrl": "https://packager.pp-87e.anonymous.stackathon-facial-recognition.exp.direct",
-  "ngrokPid": 19154
+  "expoServerPort": null,
+  "packagerPort": null,
+  "packagerPid": null,
+  "expoServerNgrokUrl": null,
+  "packagerNgrokUrl": null,
+  "ngrokPid": null
 }

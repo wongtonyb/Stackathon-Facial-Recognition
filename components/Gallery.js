@@ -4,8 +4,14 @@ import { Text, View } from 'react-native';
 class Gallery extends React.Component {
   render() {
     return (
-      <View>
-        <Text>GALLERY</Text>
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Text style={{}}>GALLERY</Text>
       </View>
     );
   }
