@@ -1,22 +1,42 @@
+/* eslint-disable camelcase */
 import React from 'react';
 import {
   StyleSheet,
   Text,
   View,
   Image,
-  ImageBackground,
   TouchableOpacity,
+  Button,
 } from 'react-native';
 import * as Permissions from 'expo-permissions';
-import * as FaceDetector from 'expo-face-detector';
 import { Camera } from 'expo-camera';
-import { captureScreen } from 'react-native-view-shot';
+import axios from 'axios';
+// import request from 'request';
+import base64ToArrayBuffer from 'base64-arraybuffer';
+
+const key = '97ca6854b01a4c668929ac6285be746b';
+const loc = 'https://westcentralus.api.cognitive.microsoft.com/';
+
+const params = { returnFaceId: 'true' };
+
+let base_instance_options = {
+  baseURL: `https://${loc}/face/v1.0/detect`,
+  qs: params,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+    'Ocp-Apim-Subscription-Key': key,
+  },
+};
 
 class DetectFace extends React.Component {
   state = {
     hasCameraPermission: null,
     type: Camera.Constants.Type.back,
-    faces: [],
+    orginalFace: null,
+    originalFaceId: null,
+    comparingFace: null,
+    comparingFaceId: null,
     capturedPhoto: null,
   };
 
@@ -27,60 +47,63 @@ class DetectFace extends React.Component {
     });
   }
 
-  // on face detection, update state.faces
-  handleFacesDetected = ({ faces }) => {
-    this.setState({ faces });
+  //snap original
+  snapOrginal = async () => {
+    if (this.camera) {
+      let photo = await this.camera.takePictureAsync();
+      let imageUrl = photo.uri;
+      base_instance_options = {
+        ...base_instance_options,
+        body: '{"url": ' + '"' + imageUrl + '"}',
+      };
+
+      axios.post(base_instance_options, (error, response, body) => {
+        if (error) {
+          console.log('Error: ', error);
+          return;
+        }
+        let jsonResponse = JSON.stringify(JSON.parse(body), null, '  ');
+        console.log('JSON Response\n');
+        console.log(jsonResponse);
+      });
+    }
   };
 
-  // for each face in state.faces, invoke renderFace on it
-  renderFaces = () => (
-    <View style={styles.facesContainer} pointerEvents="none">
-      {this.state.faces.map(this.renderFace)}
-    </View>
-  );
+  //snap original
+  // snapOrginal = async () => {
+  //   if (this.camera) {
+  //     let photo = await this.camera.takePictureAsync({
+  //       qaulity: 0.25,
+  //       base64: true,
+  //     });
+  //     this.setState({ orginalFace: photo });
+  //     //photo:{base64:}
+  //     let photob64 = base64ToArrayBuffer.decode(photo.base64);
 
-  // styling on face, depended on internal face-detection information
-  renderFace({ bounds, faceID, rollAngle, yawAngle, smilingProbability }) {
-    if (smilingProbability > 0.5) {
-      return (
-        <Image
-          key={faceID}
-          style={{
-            ...bounds.size,
-            left: bounds.origin.x,
-            top: bounds.origin.y,
-          }}
-          source={{
-            uri:
-              'https://cdn.shopify.com/s/files/1/1061/1924/products/Smiling_Emoji_with_Smiling_Eyes_large.png?v=1480481060',
-          }}
-        />
-      );
-    } else {
-      return (
-        <View
-          transform={[
-            { perspective: 600 },
-            { rotateZ: `${rollAngle.toFixed(0)}deg` },
-            { rotateY: `${yawAngle.toFixed(0)}deg` },
-          ]}
-          style={[
-            styles.face,
-            {
-              ...bounds.size,
-              left: bounds.origin.x,
-              top: bounds.origin.y,
-            },
-          ]}
-        >
-          <Text style={styles.faceText}>ID: {faceID}</Text>
-          <Text style={styles.faceText}>rollAngle: {rollAngle.toFixed(0)}</Text>
-          <Text style={styles.faceText}>yawAngle: {yawAngle.toFixed(0)}</Text>
-          <Text style={styles.faceText}>Smiling%: {smilingProbability}</Text>
-        </View>
-      );
+  //     const facedetect_instance_options = { ...base_instance_options };
+  //     facedetect_instance_options.headers['Content-Type'] = 'application/json';
+  //     const facedetect_instance = axios.create(facedetect_instance_options);
+
+  //     const facedetect_res = await facedetect_instance.post(
+  //       `/detect?returnFaceId=true&detectionModel=detection_02`,
+  //       photob64
+  //     );
+
+  //     console.log(facedetect_res.data);
+  //   }
+  // };
+
+  //snap compare
+  snapCompare = async () => {
+    if (this.camera) {
+      let photo = await this.camera.takePictureAsync({
+        option: { base64: true },
+      });
+      this.setState({ comparingFace: photo });
+      console.log('org', this.state.orginalFace);
+      console.log('comp', this.state.comparingFace);
     }
-  }
+  };
 
   //snap a pic
   snap = async () => {
@@ -99,30 +122,7 @@ class DetectFace extends React.Component {
       return <View />;
     } else if (hasCameraPermission === false) {
       return <Text>No access to camera</Text>;
-    } else if (this.state.capturedPhoto) {
-      return (
-        <View>
-          <ImageBackground
-            style={{ height: '100%', width: '100%' }}
-            resizeMode="contain"
-            source={{ uri: this.state.capturedPhoto.uri }}
-          >
-            <TouchableOpacity
-              style={{ top: 50, left: 15 }}
-              onPress={() => this.setState({ capturedPhoto: null })}
-            >
-              <Image
-                style={{ height: 40, width: 40 }}
-                source={{
-                  uri:
-                    'https://cdn0.iconfinder.com/data/icons/web/512/e52-512.png',
-                }}
-              />
-            </TouchableOpacity>
-          </ImageBackground>
-        </View>
-      );
-    } else {
+    } else if (this.state.originalFaceId === null) {
       return (
         <View style={{ flex: 1 }}>
           <Camera
@@ -135,17 +135,10 @@ class DetectFace extends React.Component {
             ref={ref => {
               this.camera = ref;
             }}
-            onFacesDetected={this.handleFacesDetected}
-            faceDetectorSettings={{
-              mode: FaceDetector.Constants.Mode.accurate,
-              detectLandmarks: FaceDetector.Constants.Landmarks.all,
-              runClassifications: FaceDetector.Constants.Classifications.all,
-            }}
           >
-            {this.renderFaces()}
             <TouchableOpacity
               style={{
-                top: -125,
+                top: -75,
                 right: 15,
               }}
               onPress={() => {
@@ -169,7 +162,10 @@ class DetectFace extends React.Component {
                 }}
               />
             </TouchableOpacity>
-            <TouchableOpacity style={{ top: 100 }} onPress={this.snap}>
+            <Text style={{ alignSelf: 'center', color: 'white' }}>
+              Take A Photo Of Original Face
+            </Text>
+            <TouchableOpacity style={{ top: 75 }} onPress={this.snapOrginal}>
               <Image
                 style={{
                   alignSelf: 'center',
@@ -185,6 +181,68 @@ class DetectFace extends React.Component {
           </Camera>
         </View>
       );
+    } else if (this.state.comparingFace === null) {
+      console.log(this.state.orginalFace);
+      return (
+        <View style={{ flex: 1 }}>
+          <Camera
+            style={{
+              flex: 1,
+              flexDirection: 'column',
+              justifyContent: 'space-around',
+            }}
+            type={this.state.type}
+            ref={ref => {
+              this.camera = ref;
+            }}
+          >
+            <TouchableOpacity
+              style={{
+                top: -75,
+                right: 15,
+              }}
+              onPress={() => {
+                this.setState({
+                  type:
+                    this.state.type === Camera.Constants.Type.back
+                      ? Camera.Constants.Type.front
+                      : Camera.Constants.Type.back,
+                });
+              }}
+            >
+              <Image
+                style={{
+                  alignSelf: 'flex-end',
+                  height: 50,
+                  width: 50,
+                }}
+                source={{
+                  uri:
+                    'https://cdn3.iconfinder.com/data/icons/linecons-free-vector-icons-pack/32/camera-512.png',
+                }}
+              />
+            </TouchableOpacity>
+            <Text style={{ alignSelf: 'center', color: 'white' }}>
+              Take A Photo Of Face To Compare
+            </Text>
+            <TouchableOpacity style={{ top: 75 }} onPress={this.snapCompare}>
+              <Image
+                style={{
+                  alignSelf: 'center',
+                  height: 75,
+                  width: 75,
+                }}
+                source={{
+                  uri:
+                    'https://cdn3.iconfinder.com/data/icons/navigation-and-settings/24/Material_icons-01-26-512.png',
+                }}
+              />
+            </TouchableOpacity>
+          </Camera>
+        </View>
+      );
+    } else {
+      return <Text>ASDF</Text>;
     }
   }
 }

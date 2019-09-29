@@ -8,18 +8,23 @@
     "eject": "expo eject"
   },
   "dependencies": {
+    "axios": "^0.19.0",
+    "base-64": "^0.1.0",
+    "base64-arraybuffer": "^0.2.0",
     "expo": "^35.0.0",
     "expo-camera": "^7.0.0",
     "expo-cli": "^3.1.2",
     "expo-face-detector": "^7.0.0",
     "expo-permissions": "^7.0.0",
+    "express": "^4.17.1",
     "firebase": "^7.0.0",
     "react": "16.8.3",
     "react-dom": "16.8.3",
     "react-native": "https://github.com/expo/react-native/archive/sdk-35.0.0.tar.gz",
     "react-native-view-shot": "^2.6.0",
     "react-native-web": "^0.11.7",
-    "react-native-web-swiper": "^2.0.6"
+    "react-native-web-swiper": "^2.0.6",
+    "request": "^2.88.0"
   },
   "devDependencies": {
     "babel-preset-expo": "^7.0.0"
