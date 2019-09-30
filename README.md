@@ -1,1 +1,12 @@
-# Stackathon-Facial-Recognition
+# SMILE
+
+Facial Recognition Stackathon
+
+Main Technologies:
+
+- React-Native
+- Expo - Camera
+- Expo - FaceDetector
+
+![GitHub Logo](/images/logo.png)
+Format: ![Alt Text](url)

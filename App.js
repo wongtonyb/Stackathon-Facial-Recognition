@@ -5,11 +5,6 @@ import Gallery from './components/Gallery';
 
 export default class App extends React.Component {
   render() {
-    return (
-      <Swiper>
-        <Main />
-        <Gallery />
-      </Swiper>
-    );
+    return <Main />;
   }
 }

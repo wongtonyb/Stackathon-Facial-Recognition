@@ -10,7 +10,6 @@ import {
 import * as Permissions from 'expo-permissions';
 import * as FaceDetector from 'expo-face-detector';
 import { Camera } from 'expo-camera';
-import { captureScreen } from 'react-native-view-shot';
 
 class DetectFace extends React.Component {
   state = {
@@ -18,6 +17,7 @@ class DetectFace extends React.Component {
     type: Camera.Constants.Type.back,
     faces: [],
     capturedPhoto: null,
+    detectedPhoto: [],
   };
 
   async componentDidMount() {
@@ -38,6 +38,8 @@ class DetectFace extends React.Component {
       {this.state.faces.map(this.renderFace)}
     </View>
   );
+
+  // renderSnaps = () => this.state.detectedPhoto.map(this.renderFace);
 
   // styling on face, depended on internal face-detection information
   renderFace({ bounds, faceID, rollAngle, yawAngle, smilingProbability }) {
@@ -74,8 +76,6 @@ class DetectFace extends React.Component {
           ]}
         >
           <Text style={styles.faceText}>ID: {faceID}</Text>
-          <Text style={styles.faceText}>rollAngle: {rollAngle.toFixed(0)}</Text>
-          <Text style={styles.faceText}>yawAngle: {yawAngle.toFixed(0)}</Text>
           <Text style={styles.faceText}>Smiling%: {smilingProbability}</Text>
         </View>
       );
@@ -86,9 +86,68 @@ class DetectFace extends React.Component {
   snap = async () => {
     if (this.camera) {
       let photo = await this.camera.takePictureAsync();
-      console.log(this.state.capturedPhoto);
       this.setState({ capturedPhoto: photo });
-      console.log(this.state.capturedPhoto);
+      this.detectSnap(this.state.capturedPhoto.uri);
+    }
+  };
+
+  //detect pic
+  detectSnap = async imageUri => {
+    const options = {
+      mode: FaceDetector.Constants.Mode.accurate,
+      detectLandmarks: FaceDetector.Constants.Landmarks.all,
+      runClassifications: FaceDetector.Constants.Classifications.all,
+    };
+    let photo = await FaceDetector.detectFacesAsync(imageUri, options);
+    this.setState({ detectedPhoto: photo.faces });
+    console.log(this.state.detectedPhoto);
+  };
+
+  //rendered captured photo
+  renderSnap = () => {
+    let {
+      bounds,
+      faceID,
+      rollAngle,
+      yawAngle,
+      smilingProbability,
+    } = this.state.faces[0];
+    if (smilingProbability > 0.5) {
+      return (
+        <Image
+          key={faceID}
+          style={{
+            ...bounds.size,
+            left: bounds.origin.x,
+            top: bounds.origin.y,
+          }}
+          source={{
+            uri:
+              'https://cdn.shopify.com/s/files/1/1061/1924/products/Smiling_Emoji_with_Smiling_Eyes_large.png?v=1480481060',
+          }}
+        />
+      );
+    } else {
+      return (
+        <View
+          transform={[
+            { perspective: 600 },
+            { rotateZ: `${rollAngle.toFixed(0)}deg` },
+            { rotateY: `${yawAngle.toFixed(0)}deg` },
+          ]}
+          style={[
+            styles.face,
+            {
+              ...bounds.size,
+              left: bounds.origin.x,
+              top: bounds.origin.y,
+            },
+          ]}
+        >
+          <Text style={styles.faceText}>ID: {faceID}</Text>
+          <Text style={styles.faceText}>Smiling%: {smilingProbability}</Text>
+        </View>
+      );
     }
   };
 
@@ -107,6 +166,7 @@ class DetectFace extends React.Component {
             resizeMode="contain"
             source={{ uri: this.state.capturedPhoto.uri }}
           >
+            {this.renderSnap()}
             <TouchableOpacity
               style={{ top: 50, left: 15 }}
               onPress={() => this.setState({ capturedPhoto: null })}
