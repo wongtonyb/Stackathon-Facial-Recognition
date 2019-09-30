@@ -8,5 +8,5 @@ Main Technologies:
 - Expo - Camera
 - Expo - FaceDetector
 
-<img src='/images/multiFace.png' width=48 height=20>
-![multi-face-recognition](/images/multiFace.png)
+<img src='/images/multiFace.png' width=200 height=400>
+<!-- ![multi-face-recognition](/images/multiFace.png) -->
