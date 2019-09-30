@@ -8,4 +8,5 @@ Main Technologies:
 - Expo - Camera
 - Expo - FaceDetector
 
-![GitHub Logo](/images/multiFace.png)
+<img src='/images/multiFace.png' width=48 height=20>
+![multi-face-recognition](/images/multiFace.png)
